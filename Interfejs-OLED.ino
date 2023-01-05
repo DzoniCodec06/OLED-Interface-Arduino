@@ -27,6 +27,8 @@ const int PROGMEM start_pos = 10;
 // Buzzer pin
 const int PROGMEM buzzer = 6;
 
+bool selected = false;
+
 
 void draw_select(int x, int y) { // y coordinate depends on what position your text is /SR y koordinata zavisi od pozicije texta koga zelite da oznacite
   display.drawLine(x, y, x+10, y+5, WHITE);
@@ -38,12 +40,33 @@ void draw_menu() {
   display.setTextSize(2);
   display.setTextColor(WHITE);
   display.print("MENU");
-  display.setCursor(40, 25);
-  display.print("Time");
-  display.setCursor(40, 45);
-  display.print("Power"); 
-  if (counter == 0) draw_select(start_pos, 25); 
-  else if (counter == 1) draw_select(start_pos, 45); 
+   
+  if (counter == 0){
+    draw_select(start_pos, 25); 
+    draw_items();
+  }
+  else if (counter == 1){
+    draw_select(start_pos, 45); 
+    draw_items();
+  }
+  else if (counter == 2) {
+     draw_select(start_pos, 45); 
+     draw_items();
+  }
+}
+
+void draw_items() {
+  if (counter < 2) {
+    display.setCursor(40, 25);
+    display.print("Time");
+    display.setCursor(40, 45);
+    display.print("Power");
+  } else {
+    display.setCursor(40, 25);
+    display.print("Power");
+    display.setCursor(40, 45);
+    display.print("Buzzer");
+  }
 }
 
 void setup() {
@@ -74,17 +97,19 @@ void loop() {
     stateDT = digitalRead(DT);
     
     if (stateDT == currentStateCLK) {       // CCW Rotation ( Decresing  -- ) 
-      display.clearDisplay();
-      if (counter == 1) counter = 0;
-      else counter = 0;
-      draw_menu();
-      display.display(); 
+      if (!selected) {
+        display.clearDisplay();
+        if (counter > 0) counter -= 1;
+        draw_menu();
+        display.display(); 
+      } else return;
     } else if (stateDT != currentStateCLK) {  // CW Rotation ( Increasing  ++ ) 
-      display.clearDisplay();
-      if (counter == 0) counter = 1;
-      else counter = 1;
-      draw_menu();
-      display.display(); 
+      if (!selected) {
+        display.clearDisplay();
+        if (counter < 2) counter += 1;
+        draw_menu();
+        display.display(); 
+      } else return;
     }
   }
   lastStateCLK = currentStateCLK;
@@ -97,6 +122,20 @@ void loop() {
     delay(75);
     noTone(buzzer);
     delay(150);
+    if (counter == 2) {
+      selected = true;
+      counter = 0;
+      display.clearDisplay();
+      display.setCursor(20, 0);
+      display.setTextSize(2);
+      display.setTextColor(WHITE);
+      display.print("Disable");
+      display.setCursor(20, 30);
+      display.print("Yes");
+      display.setCursor(80, 30);
+      display.print("No");
+      display.display();
+    }
   } 
   
   delay(1);
